@@ -1,0 +1,19 @@
+{
+  "dependencies": {
+    "express": "^4.17.1"
+  },
+  "name": "movie-node",
+  "version": "1.0.0",
+  "description": "node basics",
+  "main": "index.js",
+  "devDependencies": {
+    "nodemon": "^2.0.15"
+  },
+  "scripts": {
+    "start" : "node index.js",
+    "dev" : "nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
