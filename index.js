@@ -1,71 +1,21 @@
-import  express  from "express";
+// import is a modren syntax in node to make use of it change the ('type': module) in package.json file 
+import  express  from "express"; 
 import { MongoClient } from "mongodb";
+import dotenv from 'dotenv';
+
 const app = express();
 const PORT = 9000;
 
-app.use(express.json());
+app.use(express.json()); 
+//use act as middleware where it always listen to app express.json is inbulid middleware
 
-// const movies =[
-//   {
-//     id : "101",
-//    name: " Avengers",
-//    poster : "https://wallpapercave.com/uwp/uwp942200.jpeg"  ,
-//    ratings :  8,
-//    summary : "Nick Fury is compelled to launch the Avengers Initiative when Loki poses a threat to planet Earth. His squad of superheroes put their minds together to accomplish the task.",
-//    trailer : "https://www.youtube.com/embed/TcMBFSGVi1c",
-//    language: "english",
-// },
-//   {
-//     id : "102",
-//    name: "Avatar",
-//    poster : "https://wallpapercave.com/wp/2FoBvF7.jpg"  ,
-//    ratings : 7.8,
-//    summary : "Jake, who is paraplegic, replaces his twin on the Na'vi inhabited Pandora for a corporate mission. After the natives accept him as one of their own, he must decide where his loyalties lie.",
-//    trailer : "https://www.youtube.com/embed/5PSNL1qE6VY",
-//    language: "english",
-// },
-//   {
-//     id : "103",
-//    name: "Harry Potter",
-//    poster : "https://wallpapercave.com/wp/wp4180794.jpg"  ,
-//    ratings : 7.6,
-//    summary : "Harry Potter is a series of seven fantasy novels written by British author J. K. Rowling. The novels chronicle the lives of a young wizard, Harry Potter, and his friends Hermione Granger and Ron Weasley, all of whom are students at Hogwarts School of Witchcraft and Wizardry",
-//    trailer  :"https://www.youtube.com/embed/VyHV0BRtdxo",
-//    language: "Tamil",
-// },
-//   {
-//     id : "104",
-//    name: "Titanic",
-//    poster : "https://wallpapercave.com/wp/KCEjohB.jpg"  ,
-//    ratings : 7.6,
-//    summary : "Seventeen-year-old Rose hails from an aristocratic family and is set to be married. When she boards the Titanic, she meets Jack Dawson, an artist, and falls in love with him.",
-//    trailer  :"https://www.youtube.com/embed/kVrqfYjkTdQ",
-//    language: "english",
-      
-// },
-//   {
-//     id : "105",
-//    name: "Jurassic World ",
-//    poster : "https://wallpapercave.com/wp/wp3153552.jpg"  ,
-//    ratings : 7,
-//    summary : "A theme park showcasing genetically-engineered dinosaurs turns into a nightmare for its tourists when one of the dinosaurs escapes its enclosure. An ex-military animal expert steps up to save the day..",
-//    trailer : "https://www.youtube.com/embed/vn9mMeWcgoM",
-//    language: "malayalam",
-// },
-//   {
-//     id : "106",
-//    name: " Furious 7 ",
-//    poster : "https://wallpapercave.com/wp/wp1830963.jpg"  ,
-//    ratings : 7,
-//    summary : "Dominic and his family are caught in a quagmire when Shaw's brother seeks bloody revenge. They must not only deal with their enemy but also save a crucial programme from falling into the wrong hands.",
-//    trailer : "https://www.youtube.com/embed/Skpu5HaVkOc",
-//    language: "english",
-// },
-// ] 
+dotenv.config();  // all the key it will put it process.env
+//  console.log(process.env);
 
+// const MONGO_URL = process.env.MONGO_URL; //hide this
+const MONGO_URL= process.env.MONGO_URL;
 
-const MONGO_URL = "mongodb://localhost";
-
+//create connection function
 async function createConnection(){
   const client = new MongoClient(MONGO_URL);
    await client.connect();
@@ -75,11 +25,12 @@ async function createConnection(){
 
 const client = await createConnection();
 
-
+//Home page
 app.get("/", (request , response)=> {
   response.send("Hello World");
 });
 
+//get all movies
 app.get("/movies/", async(request , response)=> {
   
   // const {language , ratings} = request.query;
@@ -100,25 +51,25 @@ app.get("/movies/", async(request , response)=> {
   if(filter.ratings){
     filter.ratings = parseFloat(filter.ratings);
   }
-  const filterMovies = await client.db('movieApp').collection('movies').find(filter).toArray()
+  const filterMovies = await getMovies(filter)
     response.send(filterMovies);
 });
 
+//post new movies
 app.post("/movies/", async(request , response)=>{
 const data = request.body;
 // console.log(data);
 //Create movies - db.movies.insertMany(data)
- const result =  await client.db('movieApp').collection('movies').insertMany(data);
-
-
+ const result =  await createMovies(data);
 response.send(result);
 });
 
+//get movies by id
 app.get("/movies/:id", async (request , response)=> {
   console.log(request.params);
   const {id} = request.params;
    //db.movies.findOne({id:'101})
-   const movie = await client.db('movieApp').collection('movies').findOne({id:id});
+   const movie = await getMovieById(id);
 
   // const movie = movies.find((mv)=> mv.id === id);
   console.log(movie);
@@ -127,4 +78,48 @@ app.get("/movies/:id", async (request , response)=> {
   : response.status(404).send({message: "no matching movies"})
 });
 
+app.delete("/movies/:id", async (request , response)=> {
+  console.log(request.params);
+  const {id} = request.params;
+   const result = await deleteMovieById(id);
+
+  console.log(result);
+  result.deletedCount > 0
+  ? response.send(result)
+  : response.status(404).send({message: "no matching movies"})
+});
+
+app.put("/movies/:id", async (request , response)=> {
+  console.log(request.params);
+  const {id} = request.params;
+  const data = request.body;
+   const result = await updateMovieById(id, data);
+   const movie = await getMovieById(id);
+   response.send(movie);
+
+});
+
 app.listen(PORT, ()=> console.log("App is started in" , PORT));
+
+
+async function getMovies(filter) {
+  return await client.db('movieApp').collection('movies').find(filter).toArray();
+}
+
+async function createMovies(data) {
+  return await client.db('movieApp').collection('movies').insertMany(data);
+}
+
+async function getMovieById(id) {
+  return await client.db('movieApp').collection('movies').findOne({ id: id });
+}
+
+async function updateMovieById(id, data) {
+  return await client.db('movieApp').collection('movies')
+  .updateOne({ id: id }, { $set: data });
+}
+
+async function deleteMovieById(id) {
+  return await client.db('movieApp').collection('movies').deleteOne({ id: id });
+}
+
