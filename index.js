@@ -3,14 +3,18 @@ import  express  from "express";
 import { MongoClient } from "mongodb";
 import dotenv from 'dotenv';
 import { movieRouter } from "./routes/movies.js";
+import cors from 'cors';
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 9000;
 
+ 
+app.use(cors());
 app.use(express.json()); 
 //use act as middleware where it always listen to app express.json is inbulid middleware
 
-dotenv.config();  // all the key it will put it process.env
+  // all the key it will put it process.env
 //  console.log(process.env);
 
 // const MONGO_URL = process.env.MONGO_URL; //hide this
