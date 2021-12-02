@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 import { movieRouter } from "./routes/movies.js";
 
 const app = express();
-const PORT = 9000;
+const PORT = process.env.PORT || 9000;
 
 app.use(express.json()); 
 //use act as middleware where it always listen to app express.json is inbulid middleware
